@@ -48,22 +48,22 @@ getWQ<-function(){
 }
 
 #==============================================================================
-setwd("C:/Users/zsmith/Desktop/WQ Trends/Legacy STORET/Raw Data/District_Of_Columbia")
+setwd("//Pike/data/Projects/EPA3Trends/Data/Legacy STORET/Raw Data/District_Of_Columbia")
 DC <- getWQ()
 
-setwd("C:/Users/zsmith/Desktop/WQ Trends/Legacy STORET/Raw Data/Delaware")
+setwd("//Pike/data/Projects/EPA3Trends/Data/Legacy STORET/Raw Data/Delaware")
 DE <- getWQ()
 
-setwd("C:/Users/zsmith/Desktop/WQ Trends/Legacy STORET/Raw Data/Maryland")
+setwd("//Pike/data/Projects/EPA3Trends/Data/Legacy STORET/Raw Data/Maryland")
 MD <- getWQ()
 
-setwd("C:/Users/zsmith/Desktop/WQ Trends/Legacy STORET/Raw Data/Pennsylvania")
+setwd("//Pike/data/Projects/EPA3Trends/Data/Legacy STORET/Raw Data/Pennsylvania")
 PA <- getWQ()
 
-setwd("C:/Users/zsmith/Desktop/WQ Trends/Legacy STORET/Raw Data/Virginia")
+setwd("//Pike/data/Projects/EPA3Trends/Data/Legacy STORET/Raw Data/Virginia")
 VA <- getWQ()
 
-setwd("C:/Users/zsmith/Desktop/WQ Trends/Legacy STORET/Raw Data/West_Virginia")
+setwd("//Pike/data/Projects/EPA3Trends/Data/Legacy STORET/Raw Data/West_Virginia")
 WV <- getWQ()
 
 
