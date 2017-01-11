@@ -18,7 +18,7 @@
 # exported table.
 #==============================================================================
 # Set the working directory
-setwd("//pike/data/Projects/EPA3Trends/r_scripts/R_Data/WQP/Raw Data")
+setwd("//Pike/data/Projects/EPA3Trends/Data/WQP/Raw Data")
 #==============================================================================
 # Import the raw state data
 dc.df  <- read.csv("wqp_dc_raw.csv")
@@ -36,6 +36,7 @@ md.df <- rbind(md.df1, md.df2, md.df3, md.df4, md.df5)
 pa.df  <- read.csv("wqp_pa_raw.csv")
 va.df  <- read.csv("wqp_va_raw.csv")
 wv.df  <- read.csv("wqp_wv_raw.csv")
+
 #==============================================================================
 # A function for exploring the parameters of interest.
 # Use this function to select parameters with the potential for long-term 

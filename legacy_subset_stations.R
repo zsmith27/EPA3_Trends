@@ -6,7 +6,7 @@
 #          of interest.
 # Output: Creates a subset of potential trend stations.
 #==============================================================================
-setwd("C:\\Users\\Zsmith\\Desktop\\WQ_Trends\\R")
+setwd("//Pike/data/Projects/EPA3Trends/Data/Legacy STORET/Aggregate Raw Data/Legacy Station")
 #==============================================================================
 DE <- read.table("DE_Station.txt")
 DC <- read.table("DC_Station.txt")
