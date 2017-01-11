@@ -20,7 +20,7 @@ va <- read.table("VIRGINIA.txt")
 wv <- read.table("WEST_VIRGINIA.txt")
 #==============================================================================
 # Load stations and parameters specified by Buchanan.
-setwd("//pike/data/Projects/EPA3Trends/Data/Data_Jan2017/Legacy")
+setwd("//Pike/data/Projects/EPA3Trends/Data/Data_Jan2017/Legacy/Claire_Specifications")
 stations.df <- read.table("LegacyStationsAll_050316Claire.txt", header = TRUE)
 param.df <- read.delim("LegacyParam_byAgency_122915.txt")
 #==============================================================================
