@@ -1,0 +1,28 @@
+---
+title: "EPA3 Trends Notebook"
+output: html_notebook
+---
+
+### Legacy STORET Workflow
+
+1. legacy_inv_ross.R, legacy_res_ross.R, and legacy_sta_ross.R
+    + Created by Ross Mandel to import and organize Legacy STORET data.
+2. legacy_clean_up.R
+3. legacy_state_param.R
+4. legacy_sub_station_param.R
+5. legacy_subset_stations.R
+6. legacy_lat_longs.R
+
+
+### WQP Workflow
+
+1. wqp_select_params.R
+    + Imports the raw parameter files for each EPA3 State.
+    + The first function identifies parameters that contain key words (e.g., nitrogen, lead, pH).
+    + The second function subsets the raw parameter files by a selected set of specific parameter names.
+    + Output is "sub_wqp_'state.name'.csv"
+    + Use wqp_count_uniq_params.R
+3. wqp_station_subset.R
+4. wqp_station_info.R
+5. wqp_explore_matching_to_legacy.R
+6. wqp_explore_matching_to_legacy2.R
