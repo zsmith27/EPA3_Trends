@@ -1,6 +1,7 @@
 #==============================================================================
 # Author: Zachary M. Smith
-# Date: 2016
+# Created: 2016
+# Updated: 2016
 # Maintained: Zachary M. Smith
 # Purpose: The script was written to subset the raw Water Quality Portal (WQP)
 #          dataset based on parameters of interest.

@@ -58,7 +58,7 @@ final.df <- dplyr::left_join(bound, wqp.station, by = by.names )
 #==============================================================================
 # Export all data as a single table.
 setwd("//Pike/data/Projects/EPA3Trends/Data/WQP/Subset Raw Data")
-write.csv(final.df, "wqp_keep_stations.csv")
+write.csv(final.df, "wqp_keep_stations.csv", row.names = FALSE)
 
 
 
