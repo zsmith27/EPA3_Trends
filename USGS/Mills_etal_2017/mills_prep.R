@@ -23,7 +23,7 @@ source("USGS/DeCicco_etal_2017/decicco_station_identification.R")
 # Import Trends Table
 #==============================================================================
 # Specify the file directory.
-main.dir <- "D:/ZSmith/Projects/WQ_Trends/USGS_Data/Output/Oelsner_etal_2017"
+main.dir <- "D:/ZSmith/Projects/WQ_Trends/USGS_Data/Output/Mills_etal_2017"
 # Specify the file name to establish the file path.
 file.name <- file.path(main.dir, "TrendsResultsOutAll.txt")
 # Import the text file as a csv. Had to specify row.names as NULL because
@@ -78,6 +78,7 @@ trends.df <- trends.df %>%
 # Remove unnecessary objects.
 rm(trends.bad, file.name, main.dir)
 #------------------------------------------------------------------------------
+# Keep only the stations in EPA Region 3.
 trends.df <- trends.df %>% 
   filter(Site_no %in% station.df$Site_no)
 
