@@ -1,7 +1,19 @@
 ---
-title: "EPA3 Trends Notebook"
+title: "Joining Legacy STORET with WQX and NWIS"
 output: html_notebook
 ---
+
+# Introduction
+Data were acquired from Legacy STORET and the Water Quality Portal (WQP) to
+assess long-term water quality trends in EPA region 3.  This document provides
+an example how to standardize and join the data acquired from these two sources.
+
+
+# Legacy STORET
+STORET stands for “STORage and RETrieval.”
+STORET was a United States Environmental Protection Agency (USEPA)
+database that was developed in 1965 and was archived in 1998.  
+
 
 ### Legacy STORET Workflow
 
@@ -13,12 +25,81 @@ output: html_notebook
 5. legacy_subset_stations.R
 6. legacy_lat_longs.R
 
+### 1. Download and Aggregate
+Legacy STORET data was downloaded by State/County and organized in folders
+accordingly. Multiple text files were downloaded for each State/County but
+only files with the suffix "_res" or "_sta" were required.
+Data files with the suffix "_res" contains information 
+pretaining to the parameter measures, while data files with the suffix
+"_sta" contained station information. Furthermore, queries from Legacy STORET
+are divided into multiple files if the text file exceeds ~26.5 Mb. 
+The following script was used to import all of the files in the specified 
+State folder containing the specified suffix (i.e., "_res" or "_sta") and 
+bind them into a single table.
+
+```{r}
+get_res <- function(){
+  # Assume in top of state tree directory  
+  home.dir <- getwd() #get home directory
+  dirs <- list.dirs(full.names = TRUE) #get list of directories in vector form
+  for (i in seq_along(dirs)){
+    setwd(dirs[i]) # go to sub-directory
+    print(dirs[i])
+    dfiles <- list.files(pattern = glob2rx("*res*.txt")) # get list of files with data
+    for (j in seq_along(dfiles)){
+      if (grepl("inv", dfiles[j])) next 
+      if (grepl("sta", dfiles[j])) next 
+      print(dfiles[j])
+      #read file (tab-delimited) as dataframe, skip header
+      temp.df<-read.delim(dfiles[j], header = FALSE, skip = 2, 
+                          stringsAsFactors = FALSE)
+      if ("master.df" %in% ls()){
+        master.df <- rbind(master.df, temp.df)
+      } else {
+        master.df <- temp.df
+      }
+      
+      
+    }# end dfiles
+    setwd(home.dir) # go back to home
+  }#end dirs
+  colnames(master.df) <- c("Agency","Station","Station.Name","Agency.Name",
+                         "State.Name","County.Name","Latitude","Longitude",
+                         "Result.Value","R","HUC","Param","Start.Date",
+                         "Start.Time","End.Date","End.Time","Sample.Depth",
+                         "UMK","Replicate.Number","CS","COMPOSITE_GRAB_NUMBER",
+                         "CM","Primary.Activity.Category","Secondary.Activity.Category")
+  return (master.df)
+}
+#==============================================================================
+setwd("C:/Users/zsmith/Desktop/WQ Trends/Legacy STORET/Raw Data/District_Of_Columbia")
+DC <- get_res()
+
+setwd("C:/Users/zsmith/Desktop/WQ Trends/Legacy STORET/Raw Data/Delaware")
+DE <- get_res()
+
+setwd("C:/Users/zsmith/Desktop/WQ Trends/Legacy STORET/Raw Data/Maryland")
+MD <- get_res()
+
+setwd("C:/Users/zsmith/Desktop/WQ Trends/Legacy STORET/Raw Data/Pennsylvania")
+PA <- get_res()
+
+setwd("C:/Users/zsmith/Desktop/WQ Trends/Legacy STORET/Raw Data/Virginia")
+VA <- get_res()
+
+setwd("C:/Users/zsmith/Desktop/WQ Trends/Legacy STORET/Raw Data/West_Virginia")
+WV <- get_res()
+
+```
+
+
 
 ### WQP Workflow
 
 1. wqp_select_params.R
     + Imports the raw parameter files for each EPA3 State.
-    + The first function identifies parameters that contain key words (e.g., nitrogen, lead, pH).
+    + The first function identifies parameters that contain key words
+    (e.g., nitrogen, lead, pH).
     + The second function subsets the raw parameter files by a selected set of specific parameter names.
     + Output is "sub_wqp_'state.name'.csv"
     + Use wqp_count_uniq_params.R

@@ -10,6 +10,7 @@
 # Output: Creates individual ".txt" files for each EPA Region 3 State.
 #==============================================================================
 #==============================================================================
+library(dplyr)
 # Load stations and parameters specified by Buchanan.
 setwd("//Pike/data/Projects/EPA3Trends/Data/Data_Jan2017/Legacy/Claire_Specifications")
 stations.df <- read.table("LegacyStationsAll_050316Claire.txt",
@@ -96,7 +97,18 @@ subset_legacy <- function(state, stations, params, new.params) {
                                                                #ifelse(state$PARAM %in% 71886, state$RESULT.VALUE * 0.326,
                                                                ifelse(state$PARAM %in% 32230, state$RESULT.VALUE / 1000,
                                                                       state$RESULT.VALUE))))))
-  
+  #----------------------------------------------------------------------------
+  state$ICPRB_CONVERSION <- ifelse(state$PARAM %in% 11, "(x - 32) / 1.8",
+                                   ifelse(state$PARAM %in% group.1000, "x * 1000",
+                                          # meq/l to mq/l multiply by 50.
+                                          # ueq/l to mq/l multiply by 50000 (50 * 1000)
+                                          ifelse(state$PARAM %in% 409, "x * 50000",
+                                                 ifelse(state$PARAM %in% 71846, "x * 0.777",
+                                                        ifelse(state$PARAM %in% 71851, "x * 0.226",
+                                                               #ifelse(state$PARAM %in% 71886, state$RESULT.VALUE * 0.326,
+                                                               ifelse(state$PARAM %in% 32230, "x / 1000",
+                                                                      NA))))))
+  #----------------------------------------------------------------------------
   final.df <- merge(new.params[, c("PARAMETER_NUMBER", "ICPRB_NAME", "UNITS")], state,
                     by.x = "PARAMETER_NUMBER", by.y = "PARAM", all.y = TRUE)
   
@@ -108,21 +120,48 @@ state.list <- list(de.df, dc.df, md.df, pa.df, va.df, wv.df)
 final.list <- lapply(state.list, function(x) subset_legacy(x, stations.df, param, keep.params))
 
 bound <- do.call(rbind, final.list)
-
 #==============================================================================
-setwd("//Pike/data/Projects/EPA3Trends/Data/Data_Feb2017/Merged/Column_Names")
+# Flag Composite Method (CM) for shiny meta-data.
+bound$COMPOSITE_METHOD <- ifelse(bound$CM %in% "C", "Samples collected continuously",
+                                 ifelse(bound$CM %in% "G", "Samples are collected as a grab",
+                                        ifelse(bound$CM %in% "B", "Samples are not composited", NA)))
+#------------------------------------------------------------------------------
+# Remove Composite Statistics (column = "CS") codes "H" (Max) and "L" (Min).
+bound <- bound[!bound$CS %in% c("H", "L"), ]
+# Flag Composite Statistic (CS) code "A" (Average) and "N" (Number of 
+# observations for the sample). N does not appear to be a meaningful code.
+bound$COMPOSITE_STATISTIC <- ifelse(bound$CS %in% "A", "Average",
+                                    ifelse(bound$CS %in% "N",
+                                           "Number of observations for the sample",
+                                           ifelse(bound$CS %in% "D", "Replicate Sample", NA)))
+#------------------------------------------------------------------------------
+# Remove Result Remark (column = R) B, J,  N, O, P, and V.
+bound <- bound[!bound$R %in% c("B", "J", "N", "O", "P", "V"), ]
+#------------------------------------------------------------------------------
+# Flag as censored data
+bound$CENSORED <- ifelse(bound$R %in% c("K", "L", "M", "T", "U", "W"),
+                         "Censored", "Uncensored")
+#==============================================================================
+setwd("H:/Projects/EPA3Trends/Data/Data_May2017/merged")
 my.cols <- read.csv("column_names.csv", stringsAsFactors = FALSE)
 my.cols$Legacy.Columns <- toupper(my.cols$Legacy.Columns)
 final.df <- bound
 add.cols <- my.cols[!my.cols$Legacy.Columns %in% names(final.df), "ICPRB.Columns"]
+add.cols <- add.cols[!add.cols %in% ""]
 final.df[, add.cols] <- NA
 
 sub.cols <- my.cols[my.cols$Legacy.Columns %in% names(final.df), ]
 sub.cols <- sub.cols[match(names(final.df), sub.cols$Legacy.Columns),  ]
 names(final.df) <- ifelse(names(final.df) %in% sub.cols$Legacy.Columns, sub.cols$ICPRB.Columns, names(final.df))
 
-final.df <- final.df[, match(my.cols$ICPRB.Columns, names(final.df))]
-setwd("//Pike/data/Projects/EPA3Trends/Data/Merge_Data/Output/1_26_2017")
+icprb.cols <- my.cols$ICPRB.Columns[!my.cols$ICPRB.Columns %in% ""]
+final.df <- final.df[, match(icprb.cols, names(final.df))]
+#==============================================================================
+# Remove samples collected prior to 1972.
+# Helps to speed up app.
+final.df <- final.df[final.df$DATE >= 1972, ]
+#==============================================================================
+setwd("H:/Projects/EPA3Trends/Data/Data_May2017/merged")
 write.csv(final.df, paste0("prep_merge_legacy_", Sys.Date(),".csv"), row.names = FALSE)
 #==============================================================================
 ################################# OLD SCRIPT ################################## 
@@ -151,17 +190,18 @@ write.csv(final.df, "prep_merge_legacy_1_30_17.csv", row.names = FALSE)
 # 2/1/2017
 final.df <- bound
 final.df$HORIZONTAL_DATUM <- NA
-order.cols <- c("AGENCY", "STATION", "STATION.NAME", "LATITUDE",
-                "LONGITUDE", "HORIZONTAL_DATUM",
+order.cols <- c("AGENCY", "STATION", "STATION.NAME",
+                "LATITUDE", "LONGITUDE", "HORIZONTAL_DATUM",
                 "START.DATE","SAMPLE.DEPTH", "REPLICATE.NUMBER", 
-                "COMPOSITE_GRAB_NUMBER","ICPRB_NAME", "RESULT.VALUE",
-                "UNITS")
+                "COMPOSITE_GRAB_NUMBER","ICPRB_NAME",
+                "RESULT.VALUE", "UNITS")
 final.df <- final.df[, order.cols]
 #==============================================================================
 # Rename the columns to bind with Legacy STORET.
-new.names <- c("AGENCY", "SITE", "SITE_NAME", "LATITUDE", "LONGITUDE",
-               "HORIZONTAL_DATUM",
-               "DATE", "DEPTH", "REPLICATE", "COMPOSITE", "PARAMETER",
+new.names <- c("AGENCY", "SITE", "SITE_NAME",
+               "LATITUDE", "LONGITUDE", "HORIZONTAL_DATUM",
+               "DATE", "DEPTH", "REPLICATE",
+               "COMPOSITE", "PARAMETER",
                "REPORTED_VALUE", "UNITS")
 names(final.df) <- new.names
 #==============================================================================
