@@ -39,10 +39,12 @@ station.info <- lapply(station.list, function(station.x) {
   sub.file <- file.path(info.dir, sub.list[[1]])
   # Import the specified file.
   sub.df <- read.csv(sub.file, stringsAsFactors = FALSE)
-  # Keep only the "Site_no" and "staAbbrev" columns.
-  # Make sure column "Site_no" is class "character."
-  final.df <- sub.df %>% select(Site_no, staAbbrev) %>% 
-    mutate(Site_no = as.character(Site_no))
+  # Make sure columns "Site_no" and "Gage_Number are class "character."
+  # Make sure each row is unique.
+  final.df <- sub.df %>%  
+    mutate(Site_no = as.character(Site_no),
+           Gage_number = as.character(Gage_number)) %>% 
+    distinct()
   # Return the dataframe.
   return(final.df)
 })
@@ -53,6 +55,15 @@ station.df <- bind_rows(station.info) %>%
   filter(staAbbrev %in% c("DC", "DE", "PA", "MD", "VA", "WV"))
 # Remove station.info, info.dir, and station.list to save space.
 rm(station.info, info.dir, station.list)
-#------------------------------------------------------------------------------
-
+#==============================================================================
+# Export Groomed Data
+#==============================================================================
+# Specify the export directory.
+output.dir <- "D:/ZSmith/Projects/WQ_Trends/USGS_Data/Output/Groomed"
+# Name the export file.
+output.path <- file.path(output.dir, "decicco_stations.csv")
+# Export file as a csv.
+write.csv(station.df, output.path, row.names = FALSE)
+# Remove unnecessary objects.
+rm(output.dir, output.path)
 

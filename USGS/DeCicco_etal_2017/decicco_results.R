@@ -18,7 +18,9 @@
 library(dplyr)
 #------------------------------------------------------------------------------
 # Run station identification script to identify all stations in EPA Region 3.
-source("USGS/DeCicco_etal_2017/decicco_station_identification.R")
+if (!exists("station.df")) {
+  source("USGS/DeCicco_etal_2017/decicco_station_identification.R")
+}
 #==============================================================================
 # Import Results Table
 #==============================================================================
@@ -54,10 +56,12 @@ boot.df <- boot.df %>%
 # Specify output directory.
 output.dir <- "D:/ZSmith/Projects/WQ_Trends/USGS_Data/Output/Groomed"
 # Specify the file name.
-output.results <- file.path(output.dir, "decicco_results.csv")
+output.path <- file.path(output.dir, "decicco_results.csv")
 # Write csv to specified directory.
-write.csv(results.df, output.results, row.names = FALSE)
+write.csv(results.df, output.path, row.names = FALSE)
 # Specify the file name.
-output.boot <- file.path(output.dir, "decicco_bootstrap.csv")
+output.path <- file.path(output.dir, "decicco_bootstrap.csv")
 # Write csv to specified directory.
-write.csv(boot.df, output.boot, row.names = FALSE)
+write.csv(boot.df, output.path, row.names = FALSE)
+# Remove unnecessary objects.
+rm(main.dir, output.dir, output.path)

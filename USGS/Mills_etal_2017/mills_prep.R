@@ -18,7 +18,9 @@
 library(dplyr)
 #------------------------------------------------------------------------------
 # Run station identification script to identify all stations in EPA Region 3.
-source("USGS/DeCicco_etal_2017/decicco_station_identification.R")
+if (!exists("station.df")) {
+  source("USGS/DeCicco_etal_2017/decicco_station_identification.R")
+}
 #==============================================================================
 # Import Trends Table
 #==============================================================================
@@ -81,4 +83,15 @@ rm(trends.bad, file.name, main.dir)
 # Keep only the stations in EPA Region 3.
 trends.df <- trends.df %>% 
   filter(Site_no %in% station.df$Site_no)
+#==============================================================================
+# Export Groomed Data
+#==============================================================================
+# Specify the export directory.
+output.dir <- "D:/ZSmith/Projects/WQ_Trends/USGS_Data/Output/Groomed"
+# Name the export file.
+output.path <- file.path(output.dir, "mills_trends.csv")
+# Export file as a csv.
+write.csv(trends.df, output.path, row.names = FALSE)
+# Remove unnecessary objects.
+rm(output.dir, output.path)
 
