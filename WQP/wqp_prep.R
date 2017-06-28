@@ -1,29 +1,32 @@
 #==============================================================================
 #==============================================================================
 # Author: Zachary M. Smith
-# Created: 1/25/17
-# Updated: 2/22/17
+# Created: 01/25/17
+# Updated: 06/27/17
 # Maintained: Zachary M. Smith
 # Purpose: 
 # Output: 
 #==============================================================================
 #==============================================================================
+# Load dplyr for data manipulation.
+library(dplyr)
+#------------------------------------------------------------------------------
 # Load the parameter codes and reporting unit codes.
 setwd("//Pike/data/Projects/EPA3Trends/Data/Merge_Data/Claire_Specifications/1_24_2017")
 # This file contains the NWIS parameter codes selected by Buchanan.
 keep.params <- read.csv("WQP_Specifications_1_24_2017.csv", colClasses = "character")
 #==============================================================================
 setwd("//Pike/data/Projects/EPA3Trends/Data/WQP/Subset Raw Data")
-wqp <- read.csv("wqp_keep_stations.csv", stringsAsFactors = FALSE)
+wqp <- data.table::fread("wqp_keep_stations.csv", stringsAsFactors = FALSE)
 #==============================================================================
-
-wqp.sub <- wqp[wqp$CharacteristicName %in% keep.params$CharacteristicName &
-                 wqp$ResultSampleFractionText %in% keep.params$ResultSampleFractionText &
-                 wqp$ResultMeasure.MeasureUnitCode %in% keep.params$ResultMeasure.MeasureUnitCode &
-                 wqp$ResultAnalyticalMethod.MethodName %in% keep.params$ResultAnalyticalMethod.MethodName &
-                 wqp$ProviderName %in% keep.params$ProviderName &
-                 wqp$ResultAnalyticalMethod.MethodIdentifier %in% keep.params$ResultAnalyticalMethod.MethodIdentifier &
-                 wqp$ResultAnalyticalMethod.MethodIdentifierContext %in% keep.params$ResultAnalyticalMethod.MethodIdentifierContext, ]
+wqp.sub <- wqp %>%
+  filter(CharacteristicName %in% keep.params$CharacteristicName,
+         ResultSampleFractionText %in% keep.params$ResultSampleFractionText,
+         ResultMeasure.MeasureUnitCode %in% keep.params$ResultMeasure.MeasureUnitCode,
+         ResultAnalyticalMethod.MethodName %in% keep.params$ResultAnalyticalMethod.MethodName,
+         ProviderName %in% keep.params$ProviderName,
+         ResultAnalyticalMethod.MethodIdentifier %in% keep.params$ResultAnalyticalMethod.MethodIdentifier,
+         ResultAnalyticalMethod.MethodIdentifierContext %in% keep.params$ResultAnalyticalMethod.MethodIdentifierContext)
 #==============================================================================
 match.cols <- c("CharacteristicName", "ResultSampleFractionText",
                 "ResultMeasure.MeasureUnitCode",
@@ -31,9 +34,9 @@ match.cols <- c("CharacteristicName", "ResultSampleFractionText",
                 "ProviderName", "ResultAnalyticalMethod.MethodIdentifier",
                 "ResultAnalyticalMethod.MethodIdentifierContext")
 #==============================================================================
-merged <- merge(wqp.sub,
-                keep.params[, c(match.cols, "ICPRB_CODE", "ICPRB_NAME", "UNITS")],
-                by = match.cols)
+merged <- inner_join(wqp.sub,
+                    keep.params[, c(match.cols, "ICPRB_CODE", "ICPRB_NAME", "UNITS")],
+                    by = match.cols)
 #==============================================================================
 # Make sure the Results are classified as numeric.
 merged$ResultMeasureValue <- as.numeric(merged$ResultMeasureValue)
@@ -304,7 +307,7 @@ new.names <- c("AGENCY", "SITE",
 names(final.df) <- new.names
 #==============================================================================
 setwd("//Pike/data/Projects/EPA3Trends/Data/Data_Feb2017/WQP/R_Output")
-write.csv(final.df,
+data.table::fwrite(final.df,
           paste0("prep_merge_wqp_", Sys.Date(), ".csv"),
           row.names = FALSE)
 #==============================================================================

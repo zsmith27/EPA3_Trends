@@ -20,18 +20,18 @@ setwd("//Pike/data/Projects/EPA3Trends/Data/WQP/Subset Raw Data")
 #==============================================================================
 # Import the data for each state. 
 # The data was previously subset to only include potential params of interest.
-dc.df <- read.csv("sub_wqp_dc.csv", stringsAsFactors = FALSE)
-de.df <- read.csv("sub_wqp_de.csv", stringsAsFactors = FALSE)
-md.df <- read.csv("sub_wqp_md.csv", stringsAsFactors = FALSE)
-pa.df <- read.csv("sub_wqp_pa.csv", stringsAsFactors = FALSE)
-va.df <- read.csv("sub_wqp_va.csv", stringsAsFactors = FALSE)
-wv.df <- read.csv("sub_wqp_wv.csv", stringsAsFactors = FALSE)
+dc.df <- data.table::fread("sub_wqp_dc.csv", stringsAsFactors = FALSE)
+de.df <- data.table::fread("sub_wqp_de.csv", stringsAsFactors = FALSE)
+md.df <- data.table::fread("sub_wqp_md.csv", stringsAsFactors = FALSE)
+pa.df <- data.table::fread("sub_wqp_pa.csv", stringsAsFactors = FALSE)
+va.df <- data.table::fread("sub_wqp_va.csv", stringsAsFactors = FALSE)
+wv.df <- data.table::fread("sub_wqp_wv.csv", stringsAsFactors = FALSE)
 #==============================================================================
 # This function subsets the WQP data to only include data collected after 1965
 # and stations selected in the Legacy STORET data.
 keep_stations <- function(org.df, sta.df){
   org.df$ActivityStartDate <- as.Date(org.df$ActivityStartDate)
-  test <- org.df[org.df$ActivityStartDate >= "1965-01-01", ]
+  #test <- org.df[org.df$ActivityStartDate >= "1965-01-01", ]
   final.df <- org.df[grepl(paste(sta.df$Station, collapse = "|"),
                          org.df$MonitoringLocationIdentifier), ]
   return(final.df)

@@ -34,11 +34,16 @@ source("prep_site_gage.R")
 setwd("H:/Projects/EPA3Trends/Data/Data_May2017/merged/output")
 # Import Legacy and WQP data.
 legacy <- data.table::fread("prep_merge_legacy_2017-05-22.csv",
-                            colClasses = list(character = c("ICPRB_CONVERSION",
-                                                            "TIME", "END_TIME")))
+                            colClasses = list(character = "ICPRB_CONVERSION",
+                                              "TIME", "END_TIME"))
 #------------------------------------------------------------------------------
-wqp <- data.table::fread("prep_merge_wqp_2017-05-22.csv",
-                         colClasses = c(ICPRB_CONVERSION = "character"))
+# Vector of columns to be read as class character.
+char.cols <- c("ICPRB_CONVERSION", "LaboratoryName", "PreparationStartDate",
+               "MeasureQualifierCode", "SampleAquifer",
+               "ResultDepthHeightMeasure.MeasureUnitCode", 
+               "ResultDepthAltitudeReferencePointText", "StatisticalBaseCode")
+wqp <- data.table::fread("prep_merge_wqp_2017-06-27.csv",
+                         colClasses = list(character = char.cols))
 #==============================================================================
 wqp$SITE <- paste(unique(wqp$AGENCY), "-", sep = "") %>% 
   paste0(collapse = "|") %>% 
@@ -132,31 +137,33 @@ final.df <- anti_join(final.df, censored.df,
 # Remove Quality Control values which are creating approximate duplicates.
 final.df <- final.df[!grepl("Quality", final.df$ACTIVITY_TYPE), ]
 #------------------------------------------------------------------------------
-test <- final.df %>% 
-  select(SITE, LATITUDE, LONGITUDE, DEPTH) %>% 
-  distinct() %>% 
-  mutate(PRESENT = "PRESENT") %>% 
-  tidyr::spread(DEPTH, PRESENT) 
-test$NA_COUNT = rowSums(is.na(test))
-test <- test  %>% 
-  arrange(NA_COUNT) 
-# Remove specific duplicates.
-test <- final.df %>% 
-  filter(SITE == "2-JMS157.28",
-         ICPRB_NAME == "TP")
-test2 <- test %>% 
-  filter(nchar(END_TIME) == 4) %>% 
-  mutate(END_DATE = strptime(END_DATE, "%H%M", tz = ""),
-         END_DATE = format(END_DATE, "%H:%M:%S")) %>% 
-  select(SITE, END_DATE)
-
-test2 <- test %>% 
-  mutate_if(nchar(END_TIME) == 4,
-            END_TIME = paste0(substr(t1, 1, 2), ":", substr(t1, 3,4))) %>% 
-  select(SITE, END_TIME)
-t1 <- "1335"
-
-lubridate::hm(t1, format ="%H%M")
+# Correct time related columns.
+# Keep this for potential later use.
+time.df <- final.df %>% 
+  mutate(END_TIME = case_when(
+    nchar(END_TIME, keepNA = FALSE) == 4 ~ 
+      paste0(substr(END_TIME, 1, 2), ":", substr(END_TIME, 3,4), ":00"),
+    nchar(END_TIME, keepNA = FALSE) == 3 ~ 
+      paste0("0", substr(END_TIME, 1, 1), ":", substr(END_TIME, 2,3), ":00"),
+    nchar(END_TIME, keepNA = FALSE) != 4 | 
+      nchar(END_TIME, keepNA = FALSE) != 3 ~ END_TIME),
+    TIME = case_when(
+      nchar(TIME, keepNA = FALSE) == 4 ~ 
+        paste0(substr(TIME, 1, 2), ":", substr(TIME, 3,4), ":00"),
+      nchar(TIME, keepNA = FALSE) == 3 ~ 
+        paste0("0", substr(TIME, 1, 1), ":", substr(TIME, 2,3), ":00"),
+      nchar(TIME, keepNA = FALSE) != 4 | 
+        nchar(TIME, keepNA = FALSE) != 3 ~ TIME))
+rm(time.df)
+#------------------------------------------------------------------------------
+# Remove time columns because they contain many inconsistencies.
+# Examples: Does a reported time of 74 mean 7:40AM?
+#           Does a reported time of 1 mean 1:00AM?
+#           What does 56:40 mean?
+#final.df <- final.df %>% 
+#  select(-TIME, -END_TIME, -ActivityStartTime.TimeZoneCode,
+#         -ActivityEndTime.TimeZoneCode) %>% 
+#  distinct()
 #==============================================================================
 # End
-unique(final.df$DEPTH)
+

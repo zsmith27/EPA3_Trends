@@ -28,3 +28,41 @@ source("USGS/Mills_etal_2017/mills_prep.R")
 #------------------------------------------------------------------------------
 
 
+usgs.df <- station.df %>% 
+  mutate(SITE = 
+           case_when(
+             substr(Site_no, 1, 2) %in% c("dc", "de", "md", "pa", "va", "wv") ~ 
+               substr(Site_no, 3, nchar(Site_no)),
+             TRUE ~ Site_no),
+         SITE = 
+           case_when(
+             grepl("MDDNR|PADEP|SRBC", SITE) ~ gsub("_.*", "", SITE),
+             TRUE ~ SITE
+               ),
+         SITE = gsub(".*_", "", SITE))
+
+usgs.sub <- usgs.df %>% 
+  select(SITE, Site_no) %>% 
+  rename(USGS_SITE = Site_no) %>% 
+  distinct()
+
+final.sub <- final.df %>% 
+  select(SITE, AGENCY) %>% 
+  distinct()
+
+merged.anti <- anti_join(usgs.sub, final.sub, by = "SITE") 
+merged.inner <- inner_join(usgs.sub, final.sub, by = "SITE") 
+
+
+test <- final.df %>%
+  filter(grepl("6CSFH075.61", MonitoringLocationIdentifier))
+table(test$CharacteristicName)
+
+library(ggplot2)
+test2 <- test %>% 
+  filter(CharacteristicName == "Temperature, water") %>% 
+  mutate(ResultMeasureValue = as.numeric(ResultMeasureValue),
+         ActivityStartDate = as.Date(ActivityStartDate))
+
+ggplot(test2, aes(ActivityStartDate, ResultMeasureValue)) +
+  geom_point()

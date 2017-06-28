@@ -1,7 +1,7 @@
 #==============================================================================
 # Author: Zachary M. Smith
 # Created: 2016
-# Updated: 2016
+# Updated: 06/27/2017
 # Maintained: Zachary M. Smith
 # Purpose: The script was written to subset the raw Water Quality Portal (WQP)
 #          dataset based on parameters of interest.
@@ -22,21 +22,21 @@
 setwd("//Pike/data/Projects/EPA3Trends/Data/WQP/Raw Data")
 #==============================================================================
 # Import the raw state data
-dc.df  <- read.csv("wqp_dc_raw.csv")
-de.df  <- read.csv("wqp_de_raw.csv")
+dc.df  <- data.table::fread("wqp_dc_raw.csv")
+de.df  <- data.table::fread("wqp_de_raw.csv")
 
 # Maryland's data set was very large and had to be downloaded as multiple files
 # This script downloads each file and combines them...
-md.df1  <- read.csv("wqp_md_raw_1.csv")
-md.df2  <- read.csv("wqp_md_raw_2.csv")
-md.df3  <- read.csv("wqp_md_raw_3.csv")
-md.df4  <- read.csv("wqp_md_raw_4.csv")
-md.df5  <- read.csv("wqp_md_raw_5.csv")
+md.df1  <- data.table::fread("wqp_md_raw_1.csv")
+md.df2  <- data.table::fread("wqp_md_raw_2.csv")
+md.df3  <- data.table::fread("wqp_md_raw_3.csv")
+md.df4  <- data.table::fread("wqp_md_raw_4.csv")
+md.df5  <- data.table::fread("wqp_md_raw_5.csv")
 md.df <- rbind(md.df1, md.df2, md.df3, md.df4, md.df5)
 
-pa.df  <- read.csv("wqp_pa_raw.csv")
-va.df  <- read.csv("wqp_va_raw.csv")
-wv.df  <- read.csv("wqp_wv_raw.csv")
+pa.df  <- data.table::fread("wqp_pa_raw.csv")
+va.df  <- data.table::fread("wqp_va_raw.csv")
+wv.df  <- data.table::fread("wqp_wv_raw.csv")
 
 #==============================================================================
 # A function for exploring the parameters of interest.
