@@ -15,8 +15,8 @@ library(RPostgreSQL)
 # Load the data.table package which allows for faster imports with "fread".
 library(data.table)
 #==============================================================================
-setwd("D:/ZSmith/Projects/WQ_Trends/EPA3_Trends/MERGED")
-source("prep_site_gage.R")
+#setwd("D:/ZSmith/Projects/WQ_Trends/EPA3_Trends/MERGED")
+source("MERGED/prep_site_gage.R")
 # Set the working directory to the location of the flow data.
 #setwd("H:/Projects/EPA3Trends/Data/Data_May2017")
 #gage.df <- data.table::fread("Data_Flow_nocomposits_May2017.txt")
@@ -31,9 +31,10 @@ source("prep_site_gage.R")
 #rm(gage.df)
 #==============================================================================
 # Set working directory to the location of the legacy and wqp files.
-setwd("H:/Projects/EPA3Trends/Data/Data_May2017/merged/output")
+main.dir <- "H:/Projects/EPA3Trends/Data/Data_May2017/merged/output"
+legacy.dir <- file.path(main.dir, "prep_merge_legacy_2017-05-22.csv")
 # Import Legacy and WQP data.
-legacy <- data.table::fread("prep_merge_legacy_2017-05-22.csv",
+legacy <- data.table::fread(legacy.dir,
                             colClasses = list(character = "ICPRB_CONVERSION",
                                               "TIME", "END_TIME"))
 #------------------------------------------------------------------------------
@@ -41,9 +42,12 @@ legacy <- data.table::fread("prep_merge_legacy_2017-05-22.csv",
 char.cols <- c("ICPRB_CONVERSION", "LaboratoryName", "PreparationStartDate",
                "MeasureQualifierCode", "SampleAquifer",
                "ResultDepthHeightMeasure.MeasureUnitCode", 
-               "ResultDepthAltitudeReferencePointText", "StatisticalBaseCode")
-wqp <- data.table::fread("prep_merge_wqp_2017-06-27.csv",
-                         colClasses = list(character = char.cols))
+               "ResultDepthAltitudeReferencePointText", "StatisticalBaseCode",
+               "ActivityDepthAltitudeReferencePointText",
+               "ActivityTopDepthHeightMeasure.MeasureUnitCode",
+               "ActivityBottomDepthHeightMeasure.MeasureUnitCode")
+wqp.dir <- file.path(main.dir, "prep_merge_wqp_2017-06-29.csv")
+wqp <- data.table::fread(wqp.dir, colClasses = list(character = char.cols))
 #==============================================================================
 wqp$SITE <- paste(unique(wqp$AGENCY), "-", sep = "") %>% 
   paste0(collapse = "|") %>% 

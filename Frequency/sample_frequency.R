@@ -34,9 +34,9 @@ new.df <- final.df %>%
            TRUE ~ ICPRB_VALUE
          )) %>% 
   select(SITE, AGENCY, SEASON, DATE, YEAR, MONTH, JULIAN, ICPRB_NAME,
-         ICPRB_VALUE, ICPRB_UNITS, CENSORED) %>% 
+         ICPRB_VALUE, ICPRB_UNITS, GAGE_ID, CENSORED) %>% 
   group_by(SITE, AGENCY, SEASON, DATE, YEAR, MONTH, JULIAN,
-           ICPRB_NAME, ICPRB_UNITS) %>% 
+           ICPRB_NAME, ICPRB_UNITS, GAGE_ID) %>% 
   summarise(ICPRB_VALUE = mean(ICPRB_VALUE))
 #------------------------------------------------------------------------------
 # Identify any site and parameter where the values collected during
@@ -71,7 +71,8 @@ mid.julian <- data.frame(DATE = seq(as.Date("1972/1/1"),
 #------------------------------------------------------------------------------
 mid.df <- left_join(clean.df, mid.julian, by = c("YEAR", "MONTH")) %>% 
   mutate(DIFF = abs(MID - JULIAN)) %>% 
-  group_by(SITE, AGENCY, SEASON, YEAR,  MONTH, ICPRB_NAME, ICPRB_UNITS) %>%
+  group_by(SITE, AGENCY, SEASON, YEAR,  MONTH, ICPRB_NAME,
+           ICPRB_UNITS, GAGE_ID) %>%
   filter(DIFF == min(DIFF))
 #------------------------------------------------------------------------------
 # Seed randomly generated with sample(1:100, 1). Returned 24.
@@ -79,19 +80,20 @@ set.seed(24)
 # For months that contain two samples collected an equal duration apart from
 # the julian day mid-point, randomly select one sample to represent the month.
 dups.rm <- mid.df %>% 
-  group_by(SITE, AGENCY, SEASON, YEAR, MONTH, ICPRB_NAME, ICPRB_UNITS) %>% 
+  group_by(SITE, AGENCY, SEASON, YEAR, MONTH, ICPRB_NAME, ICPRB_UNITS,
+           GAGE_ID) %>% 
   filter(n() > 1) %>% 
   sample_n(1)
 #------------------------------------------------------------------------------
 # Join the data back togther with the duplicates removed.
 bind.df <- anti_join(mid.df, dups.rm,
                      by = c("SITE", "AGENCY", "SEASON","YEAR", "MONTH",
-                            "ICPRB_NAME", "ICPRB_UNITS")) %>% 
+                            "ICPRB_NAME", "ICPRB_UNITS", "GAGE_ID")) %>% 
   bind_rows(dups.rm)
 #------------------------------------------------------------------------------
 # Assign time periods based on YEAR.
 period.df <- bind.df %>% 
-  group_by(SITE, AGENCY, SEASON, YEAR, ICPRB_NAME, ICPRB_UNITS) %>% 
+  group_by(SITE, AGENCY, SEASON, YEAR, ICPRB_NAME, ICPRB_UNITS, GAGE_ID) %>% 
   summarise(COUNT = n())
 
 period.df$PERIOD <- ifelse(period.df$YEAR %in% 1972:1981, "p1",
@@ -100,7 +102,7 @@ period.df$PERIOD <- ifelse(period.df$YEAR %in% 1972:1981, "p1",
                                        ifelse(period.df$YEAR %in% 2002:2011, "p4", "p5"))))
 #------------------------------------------------------------------------------
 freq.df <- period.df %>% 
-  group_by(SITE, AGENCY, SEASON, PERIOD, ICPRB_NAME, ICPRB_UNITS) %>% 
+  group_by(SITE, AGENCY, SEASON, PERIOD, ICPRB_NAME, ICPRB_UNITS, GAGE_ID) %>% 
   summarise(COUNT = n() / 10 * 100) %>% 
   tidyr::spread(PERIOD, COUNT) %>% 
   tidyr::replace_na(list(p1 = 0, p2 = 0, p3 = 0, p4 = 0, p5 = 0)) %>% 
@@ -113,7 +115,7 @@ freq.df <- period.df %>%
 #------------------------------------------------------------------------------
 long.term <- semi_join(bind.df, freq.df,
                        by = c("SITE", "AGENCY", "SEASON",
-                              "ICPRB_NAME", "ICPRB_UNITS")) %>% 
+                              "ICPRB_NAME", "ICPRB_UNITS", "GAGE_ID")) %>% 
   select(-MID, - DIFF)
 #------------------------------------------------------------------------------
 rm(period.df, dups.rm, mid.df, mid.julian, clean.df)

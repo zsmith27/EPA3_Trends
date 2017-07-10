@@ -2,7 +2,7 @@
 #==============================================================================
 # Author: Zachary M. Smith
 # Created: 01/25/17
-# Updated: 06/27/17
+# Updated: 06/29/17
 # Maintained: Zachary M. Smith
 # Purpose: 
 # Output: 
@@ -15,9 +15,16 @@ library(dplyr)
 setwd("//Pike/data/Projects/EPA3Trends/Data/Merge_Data/Claire_Specifications/1_24_2017")
 # This file contains the NWIS parameter codes selected by Buchanan.
 keep.params <- read.csv("WQP_Specifications_1_24_2017.csv", colClasses = "character")
+# Replace all blanks with NA
+keep.params <- keep.params %>% 
+  mutate_if(is.character, funs(replace(., . == "", NA)))
 #==============================================================================
 setwd("//Pike/data/Projects/EPA3Trends/Data/WQP/Subset Raw Data")
 wqp <- data.table::fread("wqp_keep_stations.csv", stringsAsFactors = FALSE)
+#==============================================================================
+# Replace all blanks with NA
+wqp <- wqp %>% 
+  mutate_if(is.character, funs(replace(., . == "", NA)))
 #==============================================================================
 wqp.sub <- wqp %>%
   filter(CharacteristicName %in% keep.params$CharacteristicName,
@@ -78,6 +85,9 @@ merged$CENSORED <- ifelse(merged$ResultDetectionConditionText %in% "" |
 merged$ResultMeasureValue <- ifelse(merged$CENSORED %in% "CENSORED",
                                     merged$DetectionQuantitationLimitMeasure.MeasureValue,
                                     merged$ResultMeasureValue)
+merged <- merged %>% 
+  filter(!is.na(ResultMeasureValue |
+                  !is.na(merged$DetectionQuantitationLimitMeasure.MeasureValue)))
 #==============================================================================
 # ICPRB codes that indicating specific parameter rows that need to be converted.
 mult.1000 <- c(36, 195:198, 206, 207, 262, 263, 231, 573, 733, 734)
