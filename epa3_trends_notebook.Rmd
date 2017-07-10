@@ -38,57 +38,79 @@ State folder containing the specified suffix (i.e., "_res" or "_sta") and
 bind them into a single table.
 
 ```{r}
-get_res <- function(){
-  # Assume in top of state tree directory  
-  home.dir <- getwd() #get home directory
-  dirs <- list.dirs(full.names = TRUE) #get list of directories in vector form
-  for (i in seq_along(dirs)){
-    setwd(dirs[i]) # go to sub-directory
-    print(dirs[i])
-    dfiles <- list.files(pattern = glob2rx("*res*.txt")) # get list of files with data
-    for (j in seq_along(dfiles)){
-      if (grepl("inv", dfiles[j])) next 
-      if (grepl("sta", dfiles[j])) next 
-      print(dfiles[j])
-      #read file (tab-delimited) as dataframe, skip header
-      temp.df<-read.delim(dfiles[j], header = FALSE, skip = 2, 
-                          stringsAsFactors = FALSE)
-      if ("master.df" %in% ls()){
-        master.df <- rbind(master.df, temp.df)
-      } else {
-        master.df <- temp.df
-      }
-      
-      
-    }# end dfiles
-    setwd(home.dir) # go back to home
-  }#end dirs
-  colnames(master.df) <- c("Agency","Station","Station.Name","Agency.Name",
-                         "State.Name","County.Name","Latitude","Longitude",
-                         "Result.Value","R","HUC","Param","Start.Date",
-                         "Start.Time","End.Date","End.Time","Sample.Depth",
-                         "UMK","Replicate.Number","CS","COMPOSITE_GRAB_NUMBER",
-                         "CM","Primary.Activity.Category","Secondary.Activity.Category")
-  return (master.df)
+home.dir <- "D:/ZSmith/Projects/WQ_Trends/R_Data/Legacy STORET/Raw Data/District_Of_Columbia"
+file.pattern <- "*res*.txt"
+get_legacy <- function(home.dir, file.pattern){
+  # List of directories
+  dirs <- list.dirs(path = home.dir) 
+  #----------------------------------------------------------------------------
+  county.list <- lapply(seq_along(dirs), function(dir.i) {
+    print(dirs[dir.i])
+    # List all of the files with the specified pattern.
+    files.list <- list.files(path = dirs[dir.i],
+                             pattern = glob2rx(file.pattern))
+    town.list <- lapply(seq_along(files.list), function(town.i) {
+      print(paste0("...", files.list[town.i]))
+      # Specify file directory.
+      file.dir <- file.path(dirs[dir.i], files.list[town.i])
+      # Import each tab-separated file that contains the specified pattern.
+      # Ignore the header and the first two rows.
+      town.df <- data.table::fread(file.dir, sep = "\t", 
+                                   header = FALSE, skip = 2, 
+                                   colClasses = list(character = c(1:6, 10:16,
+                                                                   18, 20, 22:24),
+                                                     numeric = c(7:9, 17, 19, 21)))
+      # Specify column names.
+      colnames(town.df) <- c("Agency", "Station", "Station.Name",
+                               "Agency.Name", "State.Name", "County.Name", 
+                               "Latitude", "Longitude", "Result.Value", "R", 
+                               "HUC", "Param", "Start.Date", "Start.Time", 
+                               "End.Date", "End.Time", "Sample.Depth", "UMK", 
+                               "Replicate.Number", "CS", 
+                               "COMPOSITE_GRAB_NUMBER", "CM", 
+                               "Primary.Activity.Category", 
+                               "Secondary.Activity.Category")
+      # Make sure the "Result.Value" column is class "numeric".
+      town.df$Result.Value <- as.numeric(town.df$Result.Value)
+      town.df$TEST <- files.list[town.i]
+      # Return the new data frame.
+      return(town.df)
+    })
+    # Bind all of the imported files together.
+    county.df <- dplyr::bind_rows(town.list)
+    # Return the new data frame.
+    return(county.df)
+  })
+  # Bind all of the county data frames together.
+    final.df <- dplyr::bind_rows(county.list)
+    # Return the new data frame.
+    return(final.df)
 }
 #==============================================================================
-setwd("C:/Users/zsmith/Desktop/WQ Trends/Legacy STORET/Raw Data/District_Of_Columbia")
+main.dir <- "D:/ZSmith/Projects/WQ_Trends/R_Data/Legacy STORET/Raw Data"
+DC <- get_legacy(home.dir = file.path(main.dir, "District_Of_Columbia"),
+                 file.pattern = "*res*.txt")
+setwd("D:/ZSmith/Projects/WQ_Trends/R_Data/Legacy STORET/Raw Data/District_Of_Columbia")
 DC <- get_res()
 
-setwd("C:/Users/zsmith/Desktop/WQ Trends/Legacy STORET/Raw Data/Delaware")
+setwd("D:/ZSmith/Projects/WQ_Trends/R_Data/Legacy STORET/Raw Data/Delaware")
 DE <- get_res()
 
-setwd("C:/Users/zsmith/Desktop/WQ Trends/Legacy STORET/Raw Data/Maryland")
+setwd("D:/ZSmith/Projects/WQ_Trends/R_Data/Legacy STORET/Raw Data/Maryland")
 MD <- get_res()
 
-setwd("C:/Users/zsmith/Desktop/WQ Trends/Legacy STORET/Raw Data/Pennsylvania")
+setwd("D:/ZSmith/Projects/WQ_Trends/R_Data/Legacy STORET/Raw Data/Pennsylvania")
 PA <- get_res()
 
-setwd("C:/Users/zsmith/Desktop/WQ Trends/Legacy STORET/Raw Data/Virginia")
+setwd("D:/ZSmith/Projects/WQ_Trends/R_Data/Legacy STORET/Raw Data/Virginia")
 VA <- get_res()
 
-setwd("C:/Users/zsmith/Desktop/WQ Trends/Legacy STORET/Raw Data/West_Virginia")
+setwd("D:/ZSmith/Projects/WQ_Trends/R_Data/Legacy STORET/Raw Data/West_Virginia")
 WV <- get_res()
+
+```
+
+```{r}
 
 ```
 
